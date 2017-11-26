@@ -11,8 +11,8 @@ window.requestAnimFrame =
     };
 
 var servoSpeed = 45 * Math.PI / 180; // Radians per second
-var scene, target, actual;
-var servos, arm, bones;
+var scene, gui, target, actual;
+var armSegmentLengths, armLength, servos, arm, bones;
 
 function calculateTime(start, end) { // Radian angles
     return Math.abs(end - start) / servoSpeed;
@@ -34,6 +34,9 @@ function setServoAngles(base, shoulder, elbow, wrist) {
     servos.shoulder = shoulder;
     servos.elbow = elbow;
     servos.wrist = wrist;
+    for(var i in gui.__controllers) {
+        gui.__controllers[i].updateDisplay();
+    }
     moveServos();
 }
 
@@ -69,9 +72,9 @@ function moveArmToSpherical(radius, theta, phi) {
     var elbow = 55;
     var wrist = 90;
 
-    var a = 50;
-    var b = 40;
-    var c = 10;
+    var a = armSegmentLengths[0];
+    var b = armSegmentLengths[1];
+    var c = armSegmentLengths[2];
 
     var d = Math.sqrt(Math.pow(radius, 2) + Math.pow(c, 2));
     if(d < a + b) {
@@ -119,13 +122,12 @@ document.addEventListener('DOMContentLoaded', function(e) {
         wrist: 180
     };
 
-    var armSegmentLengths = [
+    armSegmentLengths = [
         50, // Arm
         40, // Forearm
         10   // Hand
     ];
-
-    var armLength = armSegmentLengths.reduce(function(a, b) {return a + b;}, 0);
+    armLength = armSegmentLengths.reduce(function(a, b) {return a + b;}, 0);
 
     var clock = new THREE.Clock();
     scene = new THREE.Scene();
@@ -199,13 +201,23 @@ document.addEventListener('DOMContentLoaded', function(e) {
     arm.add(bones[0]);
     arm.bind(armSkeleton);
     arm.position.y = armLength / 2;
+    arm.rotation.y = -Math.PI;
 
     scene.add(arm);
 
-    var gui = new dat.GUI();
-    gui.add(armSkeleton.bones[0].rotation, 'x', -Math.PI, Math.PI);
-    gui.add(armSkeleton.bones[1].rotation, 'x', -Math.PI, Math.PI);
-    gui.add(armSkeleton.bones[2].rotation, 'x', -Math.PI, Math.PI);
+    gui = new dat.GUI();
+    gui.add(servos, 'base', -180, 180).onChange(function(value) {
+        arm.rotation.y = value * Math.PI / 180 - Math.PI;
+    });
+    gui.add(servos, 'shoulder', 0, 180).onChange(function(value) {
+        bones[0].rotation.x = value * Math.PI / 180 - Math.PI / 2;
+    });
+    gui.add(servos, 'elbow', 0, 180).onChange(function(value) {
+        bones[1].rotation.x = value * Math.PI / 180 - Math.PI;
+    });
+    gui.add(servos, 'wrist', 0, 180).onChange(function(value) {
+        bones[2].rotation.x = value * Math.PI / 180 - Math.PI;
+    });
 
     function render() {
         requestAnimFrame(render);
