@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function(e) {
 
     var clock = new THREE.Clock();
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xdddddd);
+    scene.background = new THREE.Color(0x131d29);
     var renderer = new THREE.WebGLRenderer({antialias: true});
     document.querySelector('#rendererContainer').appendChild(renderer.domElement);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -146,34 +146,42 @@ document.addEventListener('DOMContentLoaded', function(e) {
 
     lights[0] = new THREE.AmbientLight(0x303030, 1);
 
-    lights[1] = new THREE.PointLight(0xffffff, 1);
-    lights[1].position.set(0, armLength * 1.2, 0);
+    lights[1] = new THREE.PointLight(0xeeeefe, 1.5, 300, 1.5);
+    lights[1].position.set(45, 15, 105);
+
+    lights[2] = new THREE.PointLight(0x423e6a, 1, 1200, 2);
+    lights[2].position.set(-90, 10, 10);
+
+    lights[3] = new THREE.PointLight(0x513c1f, 1, 300);
+    lights[3].position.set(40, 40, -80);
 
     for(var i = 0; i < lights.length; i++) {
         scene.add(lights[i]);
     }
 
     var geometry = new THREE.PlaneGeometry(armLength * 2, armLength * 2);
-    var material = new THREE.MeshPhongMaterial({color: 0x555555, side: THREE.DoubleSide});
+    var material = new THREE.MeshLambertMaterial({color: 0x526464, side: THREE.DoubleSide});
     var floor = new THREE.Mesh(geometry, material);
     floor.rotation.x = -Math.PI / 2;
     scene.add(floor);
 
     var geometry = new THREE.SphereGeometry(4);
-    target = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color: 0xff0000, wireframe: true}));
+    target = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: 0xff0000, wireframe: true}));
     target.position.y = armLength;
     scene.add(target);
 
-    actual = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color: 0x00ff00, wireframe: true}));
+    actual = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: 0x00ff00, wireframe: true}));
 
     var armGeometry = new THREE.BoxGeometry(3, armLength, 3, 1, armLength / 4);
     for(var i = 0; i < armGeometry.vertices.length; i++) {
         var vertex = armGeometry.vertices[i];
         var y = vertex.y + armLength / 2;
 
+        var scale = 1;
         var skinIndex;
         var skinWeight;
         if(y < armSegmentLengths[0]) {
+            scale = 2;
             skinIndex = 0;
             skinWeight = y / armSegmentLengths[0];
         }
@@ -182,19 +190,23 @@ document.addEventListener('DOMContentLoaded', function(e) {
             skinWeight = (y - armSegmentLengths[0]) / armSegmentLengths[1];
         }
         else {
+            scale = 0.75;
             skinIndex = 2;
             skinWeight = (y - armSegmentLengths[0] - armSegmentLengths[1]) / armSegmentLengths[2];
         }
 
+        armGeometry.vertices[i].x *= scale;
+        armGeometry.vertices[i].z *= scale;
         armGeometry.skinIndices.push(new THREE.Vector4(skinIndex, 0, 0, 0));
         armGeometry.skinWeights.push(new THREE.Vector4(skinWeight, 0, 0, 0));
     }
 
     var material = new THREE.MeshPhongMaterial({
         skinning: true,
-        color: 0x111111,
+        shininess: 50,
+        color: 0xeeeeee,
         side: THREE.DoubleSide
-    })
+    });
     arm = new THREE.SkinnedMesh(armGeometry, material);
     bones = makeBones();
     var armSkeleton = new THREE.Skeleton(bones);
