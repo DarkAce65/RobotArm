@@ -48,8 +48,13 @@ function moveArmToCartesian(x, y, z) {
     moveArmToSpherical(r, theta, phi);
 }
 
-function lawOfCosines(a, b, c) {
-    return Math.acos((b * b + c * c - a * a) / (2 * b * c));
+function anglesFromSides(a, b, c) {
+    var angles = [];
+    angles.push(Math.acos((b * b + c * c - a * a) / (2 * b * c)));
+    angles.push(Math.acos((a * a + c * c - b * b) / (2 * a * c)));
+    angles.push(Math.acos((a * a + b * b - c * c) / (2 * a * b)));
+
+    return angles;
 }
 
 function moveArmToSpherical(radius, theta, phi) {
@@ -60,32 +65,22 @@ function moveArmToSpherical(radius, theta, phi) {
     target.position.setFromSpherical(new THREE.Spherical(radius, theta * Math.PI / 180, phi * Math.PI / 180));
 
     var base = phi;
-    var shoulder = 90;
-    var elbow = 180;
-    var wrist = 180;
+    var shoulder = 125;
+    var elbow = 55;
+    var wrist = 90;
 
-    var a = 10;
+    var a = 50;
     var b = 40;
-    var c = 50;
+    var c = 10;
 
-    var angleA = lawOfCosines(c, radius + a, b);
-    var angleB = Math.asin((radius + a) * Math.sin(angleA) / c);
-    var angleC = Math.asin(b * Math.sin(angleA) / c);
-    console.log("A = " + (angleA * 180 / Math.PI));
-    console.log("B = " + (angleB * 180 / Math.PI));
-    console.log("C = " + (90 - theta + angleC * 180 / Math.PI));
+    var d = Math.sqrt(Math.pow(radius, 2) + Math.pow(c, 2));
+    if(d < a + b) {
+        var angles = anglesFromSides(a, b, d);
+        elbow = angles[2] * 180 / Math.PI;
+        shoulder = (Math.atan2(c, radius) + angles[1]) * 180 / Math.PI + 90 - theta;
+        wrist = (Math.atan2(radius, c) + angles[0]) * 180 / Math.PI;
+    }
 
-    angleA = lawOfCosines(radius, a, b + c);
-    angleC = Math.asin(a * Math.sin(angleA) / radius);
-    console.log("A = " + (angleA * 180 / Math.PI));
-    console.log("B = 180");
-    console.log("C = " + (90 - theta + angleC * 180 / Math.PI));
-
-    angleB = lawOfCosines(radius, a + b, c);
-    angleC = Math.asin((a + b) * Math.sin(angleB) / radius);
-    console.log("A = 180");
-    console.log("B = " + (angleB * 180 / Math.PI));
-    console.log("C = " + (90 - theta + angleC * 180 / Math.PI));
     setServoAngles(base, shoulder, elbow, wrist);
 }
 
