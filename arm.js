@@ -64,7 +64,6 @@ function moveArmToSpherical(radius, theta, phi) {
     if(radius == 0) {
         radius = 1e-10;
     }
-    console.log(radius, theta, phi);
     target.position.setFromSpherical(new THREE.Spherical(radius, theta * Math.PI / 180, phi * Math.PI / 180));
 
     var base = phi;
@@ -217,6 +216,16 @@ document.addEventListener('DOMContentLoaded', function(e) {
 
     scene.add(arm);
 
+    var toggle = 0;
+    var trail = [];
+    var trailIndex = 0;
+    var geometry = new THREE.SphereGeometry(0.75);
+    var material = new THREE.MeshLambertMaterial({color: 0xff0000});
+    for(var i = 0; i < 50; i++) {
+        trail.push(new THREE.Mesh(geometry, material));
+        scene.add(trail[i]);
+    }
+
     gui = new dat.GUI();
     gui.add(servos, 'base', -180, 180).onChange(function(value) {
         arm.rotation.y = value * Math.PI / 180 - Math.PI;
@@ -234,6 +243,14 @@ document.addEventListener('DOMContentLoaded', function(e) {
     function render() {
         requestAnimFrame(render);
         renderer.render(scene, camera);
+
+        if(toggle >= 0.02) {
+            trail[trailIndex].position.setFromMatrixPosition(bones[3].matrixWorld);
+            trailIndex = (trailIndex + 1) % trail.length;
+            toggle = 0;
+        }
+
+        toggle += clock.getDelta();
     }
 
     render();
