@@ -93,16 +93,18 @@ function moveArmToSpherical(radius, theta, phi) {
 }
 
 function dance() {
+    stop();
     danceId = setInterval(function() {
-        moveArmToCartesian(Math.random() * 100 - 50, Math.random() * 50, Math.random() * 100 - 50);
+        moveArmToCartesian(Math.random() * 100 - 50, Math.random() * 50, Math.random() * 50);
     }, 1000);
 }
 
 var timeStep = 10;
 function danceLines() {
+    stop();
     danceId = setInterval(function() {
         var current = target.position.clone();
-        var dest = new THREE.Vector3(Math.random() * 100 - 50, Math.random() * 50, Math.random() * 100 - 50);
+        var dest = new THREE.Vector3(Math.random() * 100 - 50, Math.random() * 50, Math.random() * 50);
         for(var i = 0; i < 1000 / timeStep; i++) {
             setTimeout(function(current, dest, t) {
                 var x = lerp(current.x, dest.x, t);
