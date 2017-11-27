@@ -243,6 +243,14 @@ document.addEventListener('DOMContentLoaded', function(e) {
     var armSkeleton = new THREE.Skeleton(bones);
     arm.add(bones[0]);
     arm.bind(armSkeleton);
+
+    var base = new THREE.Mesh(new THREE.CylinderGeometry(15, 18, 4), new THREE.MeshPhongMaterial({
+        shininess: 50,
+        color: 0xeeeeee,
+        side: THREE.DoubleSide
+    }));
+    arm.add(base);
+    base.position.y = -armLength / 2 + 2;
     arm.position.y = armLength / 2;
     arm.rotation.y = -Math.PI;
 
