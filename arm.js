@@ -10,9 +10,15 @@ window.requestAnimFrame =
         window.setTimeout(callback, 1000 / 60);
     };
 
+var danceId;
+var timeStep = 10;
 var servoSpeed = 45 * Math.PI / 180; // Radians per second
 var scene, gui, target, actual;
 var armSegmentLengths, armLength, servos, arm, bones;
+
+function lerp(v0, v1, t) {
+    return v0 * (1 - t) + v1 * t
+}
 
 function calculateTime(start, end) { // Radian angles
     return Math.abs(end - start) / servoSpeed;
@@ -84,6 +90,32 @@ function moveArmToSpherical(radius, theta, phi) {
     }
 
     setServoAngles(base, shoulder, elbow, wrist);
+}
+
+function dance() {
+    danceId = setInterval(function() {
+        moveArmToCartesian(Math.random() * 100 - 50, Math.random() * 50, Math.random() * 100 - 50);
+    }, 1000);
+}
+
+var timeStep = 10;
+function danceLines() {
+    danceId = setInterval(function() {
+        var current = target.position.clone();
+        var dest = new THREE.Vector3(Math.random() * 100 - 50, Math.random() * 50, Math.random() * 100 - 50);
+        for(var i = 0; i < 1000 / timeStep; i++) {
+            setTimeout(function(current, dest, t) {
+                var x = lerp(current.x, dest.x, t);
+                var y = lerp(current.y, dest.y, t);
+                var z = lerp(current.z, dest.z, t);
+                moveArmToCartesian(x, y, z);
+            }, i * timeStep, current, dest, i * timeStep / 1000);
+        }
+    }, 1000);
+}
+
+function stop() {
+    clearInterval(danceId);
 }
 
 document.addEventListener('DOMContentLoaded', function(e) {
