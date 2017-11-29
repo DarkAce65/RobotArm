@@ -92,6 +92,19 @@ function moveArmToSpherical(radius, theta, phi) {
     setServoAngles(base, shoulder, elbow, wrist);
 }
 
+function moveArmAlongLine(x, y, z) {
+    var current = target.position.clone();
+    var dest = new THREE.Vector3(x, y, z);
+    for(var i = 0; i < danceInterval / timeStep; i++) {
+        setTimeout(function(current, dest, t) {
+            var x = lerp(current.x, dest.x, t);
+            var y = lerp(current.y, dest.y, t);
+            var z = lerp(current.z, dest.z, t);
+            moveArmToCartesian(x, y, z);
+        }, i * timeStep, current, dest, i * timeStep / danceInterval);
+    }
+}
+
 function dance() {
     stop();
     danceId = setInterval(function() {
@@ -99,20 +112,10 @@ function dance() {
     }, danceInterval);
 }
 
-var timeStep = 10;
 function danceLines() {
     stop();
     danceId = setInterval(function() {
-        var current = target.position.clone();
-        var dest = new THREE.Vector3(Math.random() * 100 - 50, Math.random() * 50, Math.random() * 50);
-        for(var i = 0; i < danceInterval / timeStep; i++) {
-            setTimeout(function(current, dest, t) {
-                var x = lerp(current.x, dest.x, t);
-                var y = lerp(current.y, dest.y, t);
-                var z = lerp(current.z, dest.z, t);
-                moveArmToCartesian(x, y, z);
-            }, i * timeStep, current, dest, i * timeStep / danceInterval);
-        }
+        moveArmAlongLine(Math.random() * 100 - 50, Math.random() * 50, Math.random() * 50);
     }, danceInterval);
 }
 
