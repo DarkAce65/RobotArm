@@ -261,9 +261,9 @@ document.addEventListener('DOMContentLoaded', function(e) {
     var toggle = 0;
     var trail = [];
     var trailIndex = 0;
-    var geometry = new THREE.SphereGeometry(0.75);
-    var material = new THREE.MeshLambertMaterial({color: 0xff0000});
-    for(var i = 0; i < 50; i++) {
+    var geometry = new THREE.SphereBufferGeometry(0.75);
+    var material = new THREE.MeshBasicMaterial({color: 0xff0000});
+    for(var i = 0; i < 100; i++) {
         trail.push(new THREE.Mesh(geometry, material));
         scene.add(trail[i]);
     }
@@ -287,7 +287,11 @@ document.addEventListener('DOMContentLoaded', function(e) {
         renderer.render(scene, camera);
 
         if(toggle >= 0.02) {
+            for(var i = trailIndex + 50; i > trailIndex; i--) {
+                trail[i % trail.length].scale.multiplyScalar(0.97);
+            }
             trail[trailIndex].position.setFromMatrixPosition(bones[3].matrixWorld);
+            trail[trailIndex].scale.set(1, 1, 1);
             trailIndex = (trailIndex + 1) % trail.length;
             toggle = 0;
         }
