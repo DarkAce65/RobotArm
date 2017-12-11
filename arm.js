@@ -26,13 +26,13 @@ function calculateTime(start, end) { // Radian angles
 
 function moveServos() {
     var baseR = servos.base * Math.PI / 180 - Math.PI;
-    TweenLite.to(arm.rotation, calculateTime(arm.rotation.y, baseR), {y: baseR});
+    TweenLite.to(arm.rotation, calculateTime(arm.rotation.y, baseR), {y: baseR, 'ease': Linear.easeNone});
     var shoulderR = servos.shoulder * Math.PI / 180 - Math.PI / 2;
-    TweenLite.to(bones[0].rotation, calculateTime(bones[0].rotation.x, shoulderR), {x: shoulderR});
+    TweenLite.to(bones[0].rotation, calculateTime(bones[0].rotation.x, shoulderR), {x: shoulderR, 'ease': Linear.easeNone});
     var elbowR = servos.elbow * Math.PI / 180 - Math.PI;
-    TweenLite.to(bones[1].rotation, calculateTime(bones[1].rotation.x, elbowR), {x: elbowR});
+    TweenLite.to(bones[1].rotation, calculateTime(bones[1].rotation.x, elbowR), {x: elbowR, 'ease': Linear.easeNone});
     var wristR = servos.wrist * Math.PI / 180 - Math.PI;
-    TweenLite.to(bones[2].rotation, calculateTime(bones[2].rotation.x, wristR), {x: wristR});
+    TweenLite.to(bones[2].rotation, calculateTime(bones[2].rotation.x, wristR), {x: wristR, 'ease': Linear.easeNone});
 }
 
 function setServoAngles(base, shoulder, elbow, wrist) {
