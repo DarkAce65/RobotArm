@@ -6,7 +6,7 @@ bin:
 	mkdir -p bin
 
 main: bin main.cc
-	g++ $(CXXFLAGS) RoboticArm.cc main.cc -o bin/main
+	g++ $(CXXFLAGS) RoboticArm.cc Arm.cc main.cc -o bin/main
 
 clean:
 	rm -rf bin/
