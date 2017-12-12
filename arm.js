@@ -17,7 +17,7 @@ var scene, gui, target, actual;
 var armSegmentLengths, armLength, servos, arm, bones;
 
 function lerp(v0, v1, t) {
-    return v0 * (1 - t) + v1 * t
+    return v0 * (1 - t) + v1 * t;
 }
 
 function calculateTime(start, end) { // Radian angles
@@ -73,9 +73,9 @@ function moveArmToSpherical(radius, theta, phi) {
     target.position.setFromSpherical(new THREE.Spherical(radius, theta * Math.PI / 180, phi * Math.PI / 180));
 
     var base = phi;
-    var shoulder = 125;
-    var elbow = 55;
-    var wrist = 90;
+    var shoulder = 120;
+    var elbow = 70;
+    var wrist = 120;
 
     var a = armSegmentLengths[0];
     var b = armSegmentLengths[1];
@@ -87,6 +87,12 @@ function moveArmToSpherical(radius, theta, phi) {
         elbow = angles[2] * 180 / Math.PI;
         shoulder = (Math.atan2(c, radius) + angles[1]) * 180 / Math.PI + 90 - theta;
         wrist = (Math.atan2(radius, c) + angles[0]) * 180 / Math.PI;
+    }
+    else if(a + b + c < radius) {
+        shoulder = Math.acos((radius - b) / 2 / a) * 180 / Math.PI;
+        elbow = 180 - shoulder;
+        wrist = elbow;
+        shoulder += 90 - theta;
     }
 
     setServoAngles(base, shoulder, elbow, wrist);
@@ -108,14 +114,20 @@ function moveArmAlongLine(x, y, z) {
 function dance() {
     stop();
     danceId = setInterval(function() {
-        moveArmToCartesian(Math.random() * 100 - 50, Math.random() * 50, Math.random() * 50);
+        var half = armLength / 2;
+        var v = new THREE.Vector3(Math.random() * armLength - half, Math.random() * half, Math.random() * half);
+        v.clampLength(0, armLength);
+        moveArmToCartesian(v.x, v.y, v.z);
     }, danceInterval);
 }
 
 function danceLines() {
     stop();
     danceId = setInterval(function() {
-        moveArmAlongLine(Math.random() * 100 - 50, Math.random() * 50, Math.random() * 50);
+        var half = armLength / 2;
+        var v = new THREE.Vector3(Math.random() * armLength - half, Math.random() * half, Math.random() * half);
+        v.clampLength(0, armLength);
+        moveArmAlongLine(v.x, v.y, v.z);
     }, danceInterval);
 }
 
@@ -159,9 +171,9 @@ document.addEventListener('DOMContentLoaded', function(e) {
     };
 
     armSegmentLengths = [
-        50, // Arm
-        40, // Forearm
-        10   // Hand
+        15,   // Arm
+        12.5, // Forearm
+        15    // Hand
     ];
     armLength = armSegmentLengths.reduce(function(a, b) {return a + b;}, 0);
 
@@ -201,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function(e) {
     floor.rotation.x = -Math.PI / 2;
     scene.add(floor);
 
-    var geometry = new THREE.SphereGeometry(4);
+    var geometry = new THREE.SphereGeometry(2);
     target = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: 0xff0000, wireframe: true}));
     target.position.y = armLength;
     scene.add(target);
@@ -217,16 +229,16 @@ document.addEventListener('DOMContentLoaded', function(e) {
         var skinIndex;
         var skinWeight;
         if(y < armSegmentLengths[0]) {
-            scale = 2;
             skinIndex = 0;
             skinWeight = y / armSegmentLengths[0];
         }
         else if(y < armSegmentLengths[0] + armSegmentLengths[1]) {
+            scale = 0.75;
             skinIndex = 1;
             skinWeight = (y - armSegmentLengths[0]) / armSegmentLengths[1];
         }
         else {
-            scale = 0.75;
+            scale = 0.5;
             skinIndex = 2;
             skinWeight = (y - armSegmentLengths[0] - armSegmentLengths[1]) / armSegmentLengths[2];
         }
@@ -249,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function(e) {
     arm.add(bones[0]);
     arm.bind(armSkeleton);
 
-    var base = new THREE.Mesh(new THREE.CylinderGeometry(15, 18, 4), new THREE.MeshPhongMaterial({
+    var base = new THREE.Mesh(new THREE.CylinderGeometry(10, 12, 3), new THREE.MeshPhongMaterial({
         shininess: 50,
         color: 0xeeeeee,
         side: THREE.DoubleSide
