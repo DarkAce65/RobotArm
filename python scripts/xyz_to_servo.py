@@ -1,6 +1,7 @@
 import numpy as np
 import operator
 from collections import namedtuple
+from lmfit import Parameters, Parameter, minimize, fit_report
 
 Triangle = namedtuple("Triangle", "sides angles")
 Arm = namedtuple("Arm", "sides angles")
@@ -44,44 +45,49 @@ def calculate_xy(arm):
     return x, y
 
 
-def end_effector(parameters, goal, arm_sides, base):
+def end_effector(parameters, goal, side_lengths):
     """ Function to be minimized. How far is the actual position to desired?
     parameters: dictionary of angles that are changed to minize resids.
     goal: 3-tuple (x,y,z) of desired end effector
     arm: sides and angles of the robot arm
     base: angle of base servo
     """
-    r, y = calculate_xy(Arm(arm_sides, Angles(parameters['shoulder'], parameters['elbow'], parameters['wrist'])))
-    z = r * np.cos(np.deg2rad(base))
-    x = r * np.sin((np.deg2rad(base)))
+    r, y = calculate_xy(Arm(side_lengths, Angles(parameters['shoulder'], parameters['elbow'], parameters['wrist'])))
+    z = r * np.cos(np.deg2rad(parameters['base']))
+    x = r * np.sin((np.deg2rad(parameters['base'])))
 
     resids = list(map(abs, map(operator.sub, goal, (x, y, z))))
     return resids
 
 
-if __name__ == '__main__':
-    robot_arm = Arm(Sides(15.0, 12.5, 15.0), Angles(90, 100, 180))
-    goal = (0.0, 19.775324885840586, 27.082213207835714)
-
-    #print(calculate_xy(robot_arm))
-    #print(end_effector((), (0.0, 19.775324885840586, 27.082213207835714), robot_arm, 0))
-
-    from lmfit import Parameters, Parameter, minimize, fit_report
-
-    # define the starting values of the parameters of the minimized function
-    shoulder = Parameter('shoulder', 90, min=0, max=180)
-    elbow = Parameter('elbow', 99, min=0, max=180)
-    wrist = Parameter('wrist', 175, min=0, max=180)
-    params = Parameters()
-    params.add_many(shoulder, elbow, wrist)
-
+def approximate_angles(goal, side_lengths, angle_guesses=(90, 90, 90), report=True, iter_cb=None):
+    """Given the desired end effector location (goal), the lengths of the arm segments, and the initial guesses of the
+    angles, approximate the angles the servos must be set to."""
 
     # The base servo angle can be calculated and fixed.
-    base = np.arctan(goal[0]/goal[2])
+    base = np.rad2deg(np.arctan(goal[0] / goal[2]))
 
-    print(end_effector(params, (0.0, 19.775324885840586, 27.082213207835714), robot_arm.sides, base))
+    # define the starting values of the parameters of the minimized function
+    base = Parameter('base', base, vary=False)  # base is exact
+    shoulder = Parameter('shoulder', angle_guesses[0], min=0, max=180)
+    elbow = Parameter('elbow', angle_guesses[1], min=0, max=180)
+    wrist = Parameter('wrist', angle_guesses[2], min=0, max=180)
+    params = Parameters()
+    params.add_many(base, shoulder, elbow, wrist)
 
-    result = minimize(end_effector, params, args=(goal, robot_arm.sides, base),
-             iter_cb=params.pretty_print(), method="leastsq")
+    result = minimize(end_effector, params, args=(goal, side_lengths), method="leastsq", iter_cb=iter_cb)
 
-    print(fit_report(result.params))
+    if report:
+        print(fit_report(result.params))
+
+    return result
+
+
+if __name__ == '__main__':
+    # Example Usage
+    side_lengths = Sides(15.0, 12.5, 15.0)
+    goal = (10.0, 19.775324885840586, 27.082213207835714)
+    approximate_angles(goal, side_lengths)
+
+
+
