@@ -12,7 +12,7 @@ window.requestAnimFrame =
 
 var danceId, danceInterval = 1000;
 var timeStep = 10;
-var servoSpeed = 45 * Math.PI / 180; // Radians per second
+var servoSpeed = 120 * Math.PI / 180; // Radians per second
 var scene, gui, target, actual;
 var armSegmentLengths, armLength, servos, arm, bones;
 
@@ -26,13 +26,13 @@ function calculateTime(start, end) { // Radian angles
 
 function moveServos() {
     var baseR = servos.base * Math.PI / 180 - Math.PI;
-    TweenLite.to(arm.rotation, calculateTime(arm.rotation.y, baseR), {y: baseR, 'ease': Linear.easeNone});
+    TweenLite.to(arm.rotation, calculateTime(arm.rotation.y, baseR), {y: baseR, ease: Linear.easeNone});
     var shoulderR = servos.shoulder * Math.PI / 180 - Math.PI / 2;
-    TweenLite.to(bones[0].rotation, calculateTime(bones[0].rotation.x, shoulderR), {x: shoulderR, 'ease': Linear.easeNone});
+    TweenLite.to(bones[0].rotation, calculateTime(bones[0].rotation.x, shoulderR), {x: shoulderR, ease: Linear.easeNone});
     var elbowR = servos.elbow * Math.PI / 180 - Math.PI;
-    TweenLite.to(bones[1].rotation, calculateTime(bones[1].rotation.x, elbowR), {x: elbowR, 'ease': Linear.easeNone});
+    TweenLite.to(bones[1].rotation, calculateTime(bones[1].rotation.x, elbowR), {x: elbowR, ease: Linear.easeNone});
     var wristR = servos.wrist * Math.PI / 180 - Math.PI;
-    TweenLite.to(bones[2].rotation, calculateTime(bones[2].rotation.x, wristR), {x: wristR, 'ease': Linear.easeNone});
+    TweenLite.to(bones[2].rotation, calculateTime(bones[2].rotation.x, wristR), {x: wristR, ease: Linear.easeNone});
 }
 
 function setServoAngles(base, shoulder, elbow, wrist) {
@@ -81,19 +81,10 @@ function moveArmToSpherical(radius, theta, phi) {
     var b = armSegmentLengths[1];
     var c = armSegmentLengths[2];
 
-    var d = Math.sqrt(Math.pow(radius, 2) + Math.pow(c, 2));
-    if(d < a + b) {
-        var angles = anglesFromSides(a, b, d);
-        elbow = angles[2] * 180 / Math.PI;
-        shoulder = (Math.atan2(c, radius) + angles[1]) * 180 / Math.PI + 90 - theta;
-        wrist = (Math.atan2(radius, c) + angles[0]) * 180 / Math.PI;
-    }
-    else if(a + b + c < radius) {
-        shoulder = Math.acos((radius - b) / 2 / a) * 180 / Math.PI;
-        elbow = 180 - shoulder;
-        wrist = elbow;
-        shoulder += 90 - theta;
-    }
+	shoulder = Math.acos((radius - b) / 2 / a) * 180 / Math.PI;
+	elbow = 180 - shoulder;
+	wrist = elbow;
+	shoulder += 90 - theta;
 
     setServoAngles(base, shoulder, elbow, wrist);
 }
@@ -129,6 +120,26 @@ function danceLines() {
         v.clampLength(0, armLength);
         moveArmAlongLine(v.x, v.y, v.z);
     }, danceInterval);
+}
+
+function moveRectangle() {
+    var delay = 0;
+    moveArmToCartesian(-20, 5, 20);
+    delay += 2000;
+
+    setTimeout(function() {moveArmAlongLine(20, 5, 20);}, delay);
+    delay += 1000;
+    setTimeout(function() {moveArmAlongLine(20, 5, 10);}, delay);
+    delay += 1000;
+    setTimeout(function() {moveArmAlongLine(-20, 5, 10);}, delay);
+    delay += 1000;
+    setTimeout(function() {moveArmAlongLine(-20, 25, 10);}, delay);
+    delay += 1000;
+    setTimeout(function() {moveArmAlongLine(20, 25, 10);}, delay);
+    delay += 1000;
+    setTimeout(function() {moveArmAlongLine(20, 25, 20);}, delay);
+    delay += 1000;
+    setTimeout(function() {moveArmAlongLine(-20, 25, 20);}, delay);
 }
 
 function stop() {
@@ -278,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function(e) {
     var trailIndex = 0;
     var geometry = new THREE.SphereBufferGeometry(0.75);
     var material = new THREE.MeshBasicMaterial({color: 0xff0000});
-    for(var i = 0; i < 100; i++) {
+    for(var i = 0; i < 200; i++) {
         trail.push(new THREE.Mesh(geometry, material));
         scene.add(trail[i]);
     }
