@@ -89,5 +89,3 @@ if __name__ == '__main__':
     goal = (10.0, 19.775324885840586, 27.082213207835714)
     approximate_angles(goal, side_lengths)
 
-
-
